@@ -1,6 +1,6 @@
 package com.rsxtar;
 
-public class Test {
+public class AddTest {
     public static void main(String[] args) {
         System.out.println("hello");
     }

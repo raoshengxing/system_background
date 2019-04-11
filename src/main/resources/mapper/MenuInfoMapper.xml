@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rsxtar.mapper.MenuInfoMapper">
+    <resultMap id="menuInfoMap" type="com.rsxtar.dto.MenuInfoDto">
+        <id column="menuid" property="id"></id>
+        <result column="menuname" property="name"></result>
+        <result column="menupath" property="url"></result>
+        <result column="menuicon" property="icon"></result>
+        <result column="parentid" property="pid"></result>
+        <result column="checked" property="checked"></result>
+        <collection property="children" ofType="com.rsxtar.dto.MenuInfoDto">
+            <id column="cid" property="id"></id>
+            <result column="cname" property="name"></result>
+            <result column="cpath" property="url"></result>
+            <result column="cicon" property="icon"></result>
+            <result column="cpid" property="pid"></result>
+            <result column="checked" property="checked"></result>
+        </collection>
+    </resultMap>
+    <select id="getAllMenu" resultMap="menuInfoMap" parameterType="int">
+        select tb1.*,rm.status checked  from (
+        SELECT m1.*,m2.menuid cid,m2.menuname cname,
+        m2.menupath cpath,m2.menuicon cicon,m2.parentid cpid
+        from menuinfo m1,menuinfo m2  where m1.menuid = m2.parentid) tb1
+         LEFT JOIN role_menu rm on tb1.cid = rm.menuid and roleid = #{roleId}
+    </select>
+    <select id="getAllMenu1" resultMap="menuInfoMap" parameterType="int">
+        select tb1.*,rm.status checked  from (
+        SELECT m1.*,m2.menuid cid,m2.menuname cname,
+        m2.menupath cpath,m2.menuicon cicon,m2.parentid cpid
+        from menuinfo m1,menuinfo m2  where m1.menuid = m2.parentid) tb1
+         LEFT JOIN role_menu rm on tb1.cid = rm.menuid where roleid = #{roleId}
+    </select>
+
+    <update id="menuToEmpty" parameterType="int">
+        update role_menu set status = 0 where roleid= #{roleId}
+    </update>
+    
+    <select id="queryExist" parameterType="map" resultType="int">
+        select count(1) from role_menu where roleid=#{roleId} and menuid=#{menuId}
+    </select>
+    <update id="updateRMTable" parameterType="map">
+        update role_menu set status = 1 where roleid=#{roleId} and menuid=#{menuId}
+    </update>
+    <insert id="addRM" parameterType="map">
+        insert into role_menu values (default ,#{roleId},#{menuId},1)
+    </insert>
+    <insert id="addRMByAssignPermessionVo" parameterType="com.rsxtar.vo.AssignPermessionVo">
+        insert into role_menu values
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (default ,#{roleId},#{menuId},1)
+        </foreach>
+    </insert>
+    <select id="getMenuInfoByUser" resultType="com.rsxtar.pojo.MenuInfo" parameterType="com.rsxtar.pojo.UserInfo">
+        SELECT * FROM menuinfo where menuid in
+        (SELECT MAX(m.menuid) FROM userinfo u ,user_role ur,roleinfo r ,role_menu rm,menuinfo m
+        where  u.userid = ur.userid and ur.roleid = r.roleid
+        and r.roleid = rm.roleid and rm.menuid = m.menuid and  ur.`status`=1 and rm.`status`=1 and u.userid = #{userId}
+        GROUP BY m.menuid)
+    </select>
+</mapper>

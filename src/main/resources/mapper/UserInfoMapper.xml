@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rsxtar.mapper.UserInfoMapper">
+    <!--创建一对多映射-->
+    <resultMap id="userInfoMap" type="com.rsxtar.pojo.UserInfo">
+        <id property="userId" column="userId"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+        <result property="name" column="name"></result>
+        <result property="email" column="email"></result>
+        <result property="status" column="status"></result>
+        <collection property="roleInfos" ofType="com.rsxtar.pojo.RoleInfo">
+            <id property="roleid" column="roleid"></id>
+            <result property="rolename" column="rolename"></result>
+        </collection>
+    </resultMap>
+    <select id="loginCheck" parameterType="com.rsxtar.pojo.UserInfo" resultType="com.rsxtar.pojo.UserInfo">
+        SELECT * from userinfo where status = 1 and username = #{username} and password = #{password}
+    </select>
+
+    <insert id="addUserInfo" parameterType="com.rsxtar.pojo.UserInfo">
+        INSERT INTO userinfo values(DEFAULT ,#{username},#{password},#{email},#{name},#{status})
+    </insert>
+
+    <select id="getUserInfoMapById" resultMap="userInfoMap" parameterType="int">
+        select *
+        from userinfo u,user_role ur,roleinfo r where u.userid = #{id} and u.status=1
+        and ur.status = 1 and ur.userid = u.userid and r.roleid = ur.roleid
+    </select>
+
+    <update id="updateUserInfo" parameterType="com.rsxtar.pojo.UserInfo">
+        update userinfo
+        <set>
+        <if test="username!=null and username !=''">
+            username=#{username},
+        </if>
+        <if test="password!=null and password!=''">
+            password=#{password},
+        </if>
+        <if test="email!=null and email!=''">
+            email=#{email},
+        </if>
+        <if test="name !=null">
+            name = #{name}
+        </if>
+        </set>
+        where userid = #{userId}
+    </update>
+    <update id="deleteUserInfoById" parameterType="int">
+        UPDATE userinfo set status=0 where userid = #{id}
+    </update>
+    <select id="findAll" resultMap="userInfoMap">
+        select * from userinfo
+    </select>
+    <select id="getUserInfoBy" resultType="com.rsxtar.pojo.UserInfo" parameterType="com.rsxtar.pojo.UserInfo">
+        select * from userinfo where status=1
+        <if test="username!=null and username !=''">
+           and username=#{username}
+        </if>
+        <if test="password!=null and password!=''">
+            and password=#{password}
+        </if>
+        <if test="email!=null and email!=''">
+            and email=#{email}
+        </if>
+        <if test="name !=null and name !=''">
+            and name = #{name}
+        </if>
+        <if test="userId !=null and userId !=0">
+            and userid = #{userId}
+        </if>
+
+    </select>
+    <select id="getCount" resultType="int" parameterType="com.rsxtar.vo.UserInfoVo">
+        select count(*) from userinfo where status = 1
+        <if test="username!=null and username !=''">
+            and username = #{username}
+        </if>
+        <if test="name!=null and name !=''">
+            and name = #{name}
+        </if>
+        <if test="email!=null and email !=''">
+            and email = #{email}
+        </if>
+
+    </select>
+    <select id="getUserInfosPageBy" parameterType="com.rsxtar.vo.UserInfoVo" resultType="com.rsxtar.pojo.UserInfo">
+        SELECT * from userinfo where status = 1
+        <if test="username!=null and username !=''">
+            and username = #{username}
+        </if>
+        <if test="name!=null and name !=''">
+            and name = #{name}
+        </if>
+        <if test="email!=null and email !=''">
+            and email = #{email}
+        </if>
+        limit #{splitePageBean.start},#{splitePageBean.pageSize}
+    </select>
+    <update id="deleteBySel" parameterType="map">
+        update userinfo set status=0 where userid in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>
